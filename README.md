@@ -3,17 +3,6 @@ A much simplified implementation of paper [Paint by relaxation](https://mrl.cs.n
 
 [Coursework Pro-forma](https://github.com/user-attachments/files/24261857/CM3113-cw2223.pdf)
 
-### TLDR
-1. Load inputs: target image, two brush masks (compact + elongated), and a stroke density parameter.
-2. Build an image pyramid of the target (repeated 2× downsampling).
-3. Compute Sobel edge magnitude across pyramid levels (per RGB channel), then combine into one full-resolution edge-strength map.
-4. Compute Sobel edge direction (orientation map) from a smoothed grayscale version of the target.
-5. Precompute brush variants: a small set of discrete sizes and discrete orientations (scaled + rotated masks).
-6. Compute a multi-scale DoG (Difference of Gaussians) map and a thresholded map for region classification.
-7. Paint coarse-to-fine: for each scale, sample many candidate stroke positions; choose stroke size from edge strength (stronger edges → smaller), orientation from Sobel direction, colour as mean RGB under the mask; apply a greedy accept/reject test (only keep strokes that improve similarity).
-8. Second pass: repeat painting using elongated strokes in regions indicated by the DoG threshold, typically with higher density.
-9. Deal with unpainted areas: region growing to form patches of unpainted areas, fill them with average colour.
-
 ### Example Usage
 ```bash
 java Relaxation your_image.ppm brushSquare.pgm brushEllipse.pgm 0.01 -n 10
@@ -45,5 +34,15 @@ The `-g` option is pretty useless, but `-n` option can sometimes add a tiny bit 
 | ![sushi-cat-original](https://github.com/user-attachments/assets/03c5064d-5f02-47ad-bf00-96bd115799b4) | ![sushi-cat-painted](https://github.com/user-attachments/assets/6bf42780-cfc9-40ba-bc88-9b99f4589b50) | ![sushi-cat-painted-n-100](https://github.com/user-attachments/assets/0b2dbcfe-69ad-4712-b3c3-24f723e69deb) |
 
 ### The Painting Process
+1. Load inputs: target image, two brush masks (compact + elongated), and a stroke density parameter.
+2. Build an image pyramid of the target (repeated 2× downsampling).
+3. Compute Sobel edge magnitude across pyramid levels (per RGB channel), then combine into one full-resolution edge-strength map.
+4. Compute Sobel edge direction (orientation map) from a smoothed grayscale version of the target.
+5. Precompute brush variants: a small set of discrete sizes and discrete orientations (scaled + rotated masks).
+6. Compute a multi-scale DoG (Difference of Gaussians) map and a thresholded map for region classification.
+7. Paint coarse-to-fine: for each scale, sample many candidate stroke positions; choose stroke size from edge strength (stronger edges → smaller), orientation from Sobel direction, colour as mean RGB under the mask; apply a greedy accept/reject test (only keep strokes that improve similarity).
+8. Second pass: repeat painting using elongated strokes in regions indicated by the DoG threshold, typically with higher density.
+9. Deal with unpainted areas: region growing to form patches of unpainted areas, fill them with average colour.
+
 ![35322ee91a02c10a1a5b9981dce4535c](https://github.com/user-attachments/assets/7a2e1400-5c8a-43ec-811c-26c1eb80f810)
 > From left-to-right: Five level of stroke sizes, right-most image is the final output
