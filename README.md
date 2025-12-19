@@ -3,9 +3,10 @@ A simplified implementation of paper [Paint by relaxation](https://ieeexplore.ie
 
 ![dd353448da4d8bc42cb0629fb0b573ea](https://github.com/user-attachments/assets/bebf8907-ed82-4152-b9fd-3703140e85d6)
 
-### Compile
+### Compile & Generate Javadoc
 ```bash
 javac Relaxation.java
+javadoc -d doc ./*.java
 ```
 
 ### Usage Help
