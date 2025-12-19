@@ -1,7 +1,7 @@
 # Paint By Relaxation
-A simplified implementation of paper [Paint by relaxation](https://ieeexplore.ieee.org/document/934657), coursework for Computer Vision course at Cardiff University in 2022.
+A much simplified implementation of paper [Paint by relaxation](https://mrl.cs.nyu.edu/publications/painterly-relaxation/), a bit more like [Painterly rendering with curved brush strokes of multiple sizes](https://dl.acm.org/doi/10.1145/280814.280951) in practice, coursework for Computer Vision course at Cardiff University in 2022.
 
-[Coursework Proforma (documents what should be implemented)](https://github.com/user-attachments/files/24261857/CM3113-cw2223.pdf)
+[Coursework Pro-forma](https://github.com/user-attachments/files/24261857/CM3113-cw2223.pdf)
 
 
 ### Example Usage
