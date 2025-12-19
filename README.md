@@ -1,14 +1,7 @@
 # Paint By Relaxation
 A simplified implementation of paper [Paint by relaxation](https://ieeexplore.ieee.org/document/934657), coursework for Computer Vision course at Cardiff University in 2022.
-|  | Sophie | Dorothy |
-|----------------------------------|----------------------------------|----------------------------------|
-| Input | ![sophie-original](https://github.com/user-attachments/assets/0eb7c7ba-4283-46a1-85f1-b88535cbec7f) | ![dorothy-original](https://github.com/user-attachments/assets/c6ebcee2-8d70-4dda-b1a2-b267cb3c9589) |
-| Output | ![sophie](https://github.com/user-attachments/assets/fcc4a2b7-3f24-44ae-a823-f34fa6d39897) | ![dorothy](https://github.com/user-attachments/assets/7eec6b68-d0da-4085-b5ff-05b2b174503a) |
 
-
-
-
-
+![dd353448da4d8bc42cb0629fb0b573ea](https://github.com/user-attachments/assets/bebf8907-ed82-4152-b9fd-3703140e85d6)
 
 ### Compile
 ```bash
@@ -31,3 +24,7 @@ The `-g` option is pretty useless, but `-n` option can sometimes add a tiny bit 
 | Input Image | Painted Output | With Imperfection (`-n 100`) |
 |----------------------------------|----------------------------------|----------------------------------|
 | ![sushi-cat-original](https://github.com/user-attachments/assets/03c5064d-5f02-47ad-bf00-96bd115799b4) | ![sushi-cat-painted](https://github.com/user-attachments/assets/6bf42780-cfc9-40ba-bc88-9b99f4589b50) | ![sushi-cat-painted-n-100](https://github.com/user-attachments/assets/0b2dbcfe-69ad-4712-b3c3-24f723e69deb) |
+
+### The Painting Process
+![35322ee91a02c10a1a5b9981dce4535c](https://github.com/user-attachments/assets/7a2e1400-5c8a-43ec-811c-26c1eb80f810)
+> From left-to-right: Five level of stroke sizes, right-most image is the final output
