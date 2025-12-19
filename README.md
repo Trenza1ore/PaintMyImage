@@ -3,6 +3,15 @@ A much simplified implementation of paper [Paint by relaxation](https://mrl.cs.n
 
 [Coursework Pro-forma](https://github.com/user-attachments/files/24261857/CM3113-cw2223.pdf)
 
+### TLDR
+1. Load inputs: target image, two brush masks (compact + elongated), and a stroke density parameter.
+2. Build an image pyramid of the target (repeated 2× downsampling).
+3. Compute Sobel edge magnitude across pyramid levels (per RGB channel), then combine into one full-resolution edge-strength map.
+4. Compute Sobel edge direction (orientation map) from a smoothed grayscale version of the target.
+5. Precompute brush variants: a small set of discrete sizes and discrete orientations (scaled + rotated masks).
+6. Compute a multi-scale DoG (Difference of Gaussians) map and a thresholded map for region classification.
+7. Paint coarse-to-fine: for each scale, sample many candidate stroke positions; choose stroke size from edge strength (stronger edges → smaller), orientation from Sobel direction, colour as mean RGB under the mask; apply a greedy accept/reject test (only keep strokes that improve similarity).
+8. Second pass: repeat painting using elongated strokes in regions indicated by the DoG threshold, typically with higher density.
 
 ### Example Usage
 ```bash
