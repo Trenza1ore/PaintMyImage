@@ -1,6 +1,9 @@
 # Paint By Relaxation
 A simplified implementation of paper [Paint by relaxation](https://ieeexplore.ieee.org/document/934657), coursework for Computer Vision course at Cardiff University in 2022.
 
+[Coursework Proforma (documents what should be implemented)](https://github.com/user-attachments/files/24261857/CM3113-cw2223.pdf)
+
+
 ### Example Usage
 ```bash
 java Relaxation your_image.ppm brushSquare.pgm brushEllipse.pgm 0.01 -n 10
