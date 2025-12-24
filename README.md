@@ -35,6 +35,11 @@ The `-n` option can sometimes add a tiny bit of desired randomness.
 |----------------------------------|----------------------------------|----------------------------------|
 | ![sushi-cat-original](https://github.com/user-attachments/assets/03c5064d-5f02-47ad-bf00-96bd115799b4) | ![sushi-cat-painted](https://github.com/user-attachments/assets/6bf42780-cfc9-40ba-bc88-9b99f4589b50) | ![sushi-cat-painted-n-100](https://github.com/user-attachments/assets/0b2dbcfe-69ad-4712-b3c3-24f723e69deb) |
 
+
+### Stylized Animation (created via [Std-Raytracer](https://github.com/Trenza1ore/std-raytracer)):
+
+https://github.com/user-attachments/assets/2076b9f9-3451-42bf-a416-cb75cb11fa56
+
 ### The Painting Process
 > Optimistic thread locking is used for **safe** multi-threading painting, **unsafe** version does not check the pixel version numbers
 
