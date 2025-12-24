@@ -422,7 +422,7 @@ public class ArrayHelper {
      */
     public static void NormalizeImg(int[][] img, int width, int height)
     {
-        int i, j, minVal = img[0][0], maxVal = img[0][0], diffMinMax;
+        int i, j, minVal = img[0][0], maxVal = img[0][0], diff;
         
         for (i = 0; i < width; i++) {
             for (j = 0; j < height; j++) {
@@ -431,11 +431,16 @@ public class ArrayHelper {
             }
         }
 
-        diffMinMax = maxVal - minVal;
+        diff = maxVal - minVal;
+
+        if (diff <= 0) {
+            diff = 1;
+            System.out.println("Warning: an integer array of the same value has been normalized, something's wrong!");
+        }
 
         for (i = 0; i < width; i++) {
             for (j = 0; j < height; j++) {
-                img[i][j] = (img[i][j] - minVal) * 255 / diffMinMax;
+                img[i][j] = (img[i][j] - minVal) * 255 / diff;
             }
         }
     }
@@ -466,6 +471,11 @@ public class ArrayHelper {
 
         diff = maxVal - minVal;
 
+        if (diff <= (double) Float.MIN_VALUE) {
+            diff = 1.0;
+            System.out.println("Warning: an integer array of the same value has been normalized, something's wrong!");
+        }
+
         for (i = 0; i < width; i++) {
             for (j = 0; j < height; j++) {
                 newImg[i][j] = (int) Math.round((arr[i][j] - minVal) * cap / diff);
@@ -493,6 +503,7 @@ public class ArrayHelper {
     
     /** 
      * Saves a grayscale image
+     * 
      * @param norm whether the pixel values should be normalized
      */
     public static void SaveImg(int[][] pixels, String name, int depth, int width, int height, boolean norm)
@@ -508,6 +519,7 @@ public class ArrayHelper {
     
     /** 
      * Saves a grayscale image with the same dimensions and colour depth as a template image
+     * 
      * @param norm whether the pixel values should be normalized
      */
     public static void SaveImgLike(int[][] pixels, String name, ImagePPM image0, boolean norm)

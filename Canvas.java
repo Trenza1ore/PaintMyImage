@@ -2,26 +2,25 @@ import java.util.*;
 
 /**
  * This canvas class produces paintings according to an input source image, 
- * I can multi-thread the painting process by locking the canvas array, 
+ * the painting process can be multi-threaded by locking the canvas array, 
  * but it can be problematic and would also break the ability to produce 
- * identical results given a set random seed... So a single-threaded 
- * approach is used (it's not going to take a long time anyway)
+ * identical results given a set random seed...
  * @author Hugo (Jin Huang)
  */
 public class Canvas {
+    public int[][][][][] brushes;
     public int[][][] srcImg, srcImgNoise, canvas;
-    public int[][] intermediate;
+    public int[][] intermediate, diagLen;
     public int width, height;
     public String name = "Result";
     private TaskManager taskStatus;
     private Random RNG;
     private double PD;
     private boolean noisyRender;
-    private int[][] magMap, DoG, scaledSize, diagLen;
+    private int[][] magMap, DoG, scaledSize;
     private boolean[][] visited;
     private double[][] oriMap;
     private double[] brushAngles;
-    private int[][][][][] brushes;
     private int[] DoGValue = {0, 255};
 
     
@@ -122,7 +121,7 @@ public class Canvas {
      * @param colEnd upper bound in columns (exclusive)
      * @return boolean whether the stroke is an improvement
      */
-    private boolean FastEvalStroke(int[][][] newCanvas, int rowStart, int rowEnd, int colStart, int colEnd)
+    boolean EvalStroke(int[][][] newCanvas, int rowStart, int rowEnd, int colStart, int colEnd)
     {
         int oldAE = 0, newAE = 0; // Absolute errors
         int i, j, k; // index for channel/row/column
@@ -147,7 +146,7 @@ public class Canvas {
      * @param angle the angle to match
      * @return int index of the closest orientation
      */
-    private int FindClosestBrushAngle(double angle)
+    int FindClosestBrushAngle(double angle)
     {
         double next, current = Math.abs(brushAngles[0] - angle);
         
@@ -156,8 +155,8 @@ public class Canvas {
             if (current < next) {
                 // Check if the angle is between the first and last brush angle
                 if (i == 0) {
-                    // If the last brush angle is indeed closer, return its index
-                    if (Math.abs(brushAngles[15] - angle) < current) {
+                    // If the last brush angle is actually closer, return its index
+                    if (Math.abs((brushAngles[15] - 2 * Math.PI) - angle) < current) {
                         return 15;
                     }
                 }
@@ -174,30 +173,50 @@ public class Canvas {
      */
     public void PaintAll()
     {
-        int N, i;
+        int i;
+        long N;
         
         // Start the timer for the sub tasks
         taskStatus.StartSubTask();
+
+        // First pass with compact brushes
         for (i = 0; i < 5; i++) {
-            N = (int) Math.round(PD*Math.pow(2, i));
-            // First pass with compact brushes
-            PaintStrokes(0, i, N);
-            // Second pass with elongated brushes and doubled density
-            PaintStrokes(1, i, 2*N);
-            // One scale of the brushes painted onto the canvas, start next sub task 
+            N = Math.round(PD*Math.pow(2, i));
+            PaintStrokes(0, i, N, noisyRender && i > 1);
+            // One scale of the compact brush strokes painted onto the canvas, start next sub task 
+            taskStatus.FinishSubTask();
+        }
+
+        // Double the density in the second pass
+        PD *= 2;
+
+        // Second pass with elongated brushes
+        for (i = 0; i < 5; i++) {
+            N = Math.round(PD*Math.pow(2, i));
+            PaintStrokes(1, i, N, noisyRender && i > 1);
+            // One scale of the elongated brush strokes painted onto the canvas, start next sub task 
             taskStatus.FinishSubTask();
         }
     }
     
     
     /** 
-     * Paint all the strokes of a given size of a given brush
+     * Paint all the strokes of a given size of a given brush, if the edge magnitude 
+     * corresponds to i and the thresholded MDoG value is appropriate 
+     * (compact: 0, elongated: 255) <p>
+     *  s | i | Size | Magnitude <p>
+     *  4 | 0 |  5/5 |[  0,  51] <p>
+     *  3 | 1 |  4/5 |[ 52, 102] <p>
+     *  2 | 2 |  3/5 |[103, 153] <p>
+     *  1 | 3 |  2/5 |[154, 204] <p>
+     *  0 | 4 |  1/5 |[205, 255] <p>
      * 
      * @param brushType 0 for compact brush, 1 for elongated brush
-     * @param i
-     * @param N
+     * @param i index of brush
+     * @param N number of positions to consider painting a stroke
+     * @param noisyStroke whether the stroke's colour should be noisy
      */
-    public void PaintStrokes(int brushType, int i, int N)
+    public void PaintStrokes(int brushType, int i, long N, boolean noisyStroke)
     {
         int x, y;
 
@@ -210,17 +229,11 @@ public class Canvas {
             y = RNG.nextInt(height);
             // Only paint if the edge magnitude corresponds to i and the thresholded 
             // MDoG value is appropriate (compact: 0, elongated: 255)
-            // s | i | Size | Magnitude
-            // 4 | 0 |  5/5 |[  0,  51]
-            // 3 | 1 |  4/5 |[ 52, 102]
-            // 2 | 2 |  3/5 |[103, 153]
-            // 1 | 3 |  2/5 |[154, 204]
-            // 0 | 4 |  1/5 |[205, 255]
             // For Java's integers, -1/n = 0, so this condition works
             if ((DoG[x][y] == DoGValue[brushType]) && (((magMap[x][y]-1) / 51) == i)) {
                 // Only render the stroke as a noisy stroke if the stroke's size is
                 // 1/5 or 2/5 or 3/5 of the original brush size and the user wants noise
-                Paint(brushType, 4 - i, oriMap[x][y], x, y, noisyRender && i > 1);
+                Paint(brushType, 4 - i, oriMap[x][y], x, y, noisyStroke);
             }
         }
     }
@@ -244,6 +257,7 @@ public class Canvas {
      * @param edgeOrientation sobel orientation of the source image at position (x, y)
      * @param x row-position of the proposed stroke on canvas
      * @param y column-position of the proposed stroke on canvas
+     * @param noisyStroke whether the stroke's colour should be noisy
      */
     public void Paint(int brushType, int s, double edgeOrientation, int x, int y, boolean noisyStroke)
     {
@@ -321,7 +335,7 @@ public class Canvas {
         }
 
         // Keep the stroke if it makes the canvas more similar to the input image
-        if (FastEvalStroke(newCanvas, rowStart, rowEnd, colStart, colEnd)) {
+        if (EvalStroke(newCanvas, rowStart, rowEnd, colStart, colEnd)) {
             // Render this stroke onto the canvas
             if (noisyStroke) {
                 // If noisy strokes are wanted, render the noisy stroke

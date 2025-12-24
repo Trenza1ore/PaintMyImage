@@ -2,11 +2,7 @@
  * This PixelRotator class implements Runnable and is a task that a 
  * fixed-size thread pool can execute, rotating 2D image arrays 
  * pixel-by-pixel is the most time-consuming task except for painting 
- * the strokes, however each stroke has to be evaluated in chronological 
- * order and I can only multi-thread the rotation as a result <p>
- * Yes, I can indeed multi-thread painting by locking the canvas array, 
- * but it can be problematic and would also break the ability to produce 
- * identical results given a set random seed... So, no
+ * the strokes.
  * @author Hugo (Jin Huang)
  */
 public class PixelRotator implements Runnable
@@ -51,14 +47,13 @@ public class PixelRotator implements Runnable
      * @param srcImg source image (grayscale or one colour channel)
      * @param dstImg destination image (grayscale or one colour channel)
      * @param inputSize source image's size
-     * @param targetSize destination image's size
      * @param angle the angle to rotate the source image by
      */
-    public PixelRotator(int[][] img, int[][] imgCopy, int imgSize, float angle)
+    public PixelRotator(int[][] srcImg, int[][] dstImg, int inputSize, float angle)
     {
-        this.srcImg = img;
-        this.dstImg = imgCopy;
-        n = imgSize;
+        this.srcImg = srcImg;
+        this.dstImg = dstImg;
+        n = inputSize;
         m = (int) Math.sqrt(2*n*n) + 1;
         float[] rotMatrix = ArrayHelper.RotationMatrix(angle);
         // Extract elements in the rotation matrix

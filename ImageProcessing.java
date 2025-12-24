@@ -66,7 +66,7 @@ public class ImageProcessing {
      * @param img input image (grayscale or one colour channel)
      * @param width img's row number
      * @param height img's column number
-     * @param filterSize size of the box filter (must be a positive odd integer >= 1)
+     * @param filterSize size of the box filter (must be a positive odd integer)
      * @return int[][] filtered image
      */
     public static int[][] BoxFilter(int[][] img, int width, int height, int filterSize)
@@ -77,7 +77,7 @@ public class ImageProcessing {
 
         int row, col, i, j, pixel, offset = filterSize / 2;
         float filterArea = filterSize*filterSize;
-        int[][] result = new int[width][height], padded = PadBorder(img, offset, 'r', width, height);
+        int[][] result = new int[width][height], padded = PadBorder(img, offset, 'R', width, height);
 
         // Filter all pixels
         for (row = 0; row < width; row++) {
@@ -98,7 +98,7 @@ public class ImageProcessing {
 
     
     /** 
-     * Calculates the multi-scale Difference of Gaussian of a grayscale image, 
+     * Calculates the Multi-scale Difference of Gaussians of a grayscale image, 
      * for every sigma (standard deviation) passed in, an unsigned DoG is calculated by
      * subtracting GaussianBlur(img, sigma) from GaussianBlur(img, 2 * sigma)
      * 
@@ -106,24 +106,39 @@ public class ImageProcessing {
      * @param width img's row number
      * @param height img's column number
      * @param sigmas the standard deviation
-     * @return int[][] 
+     * @return int[][] Multi-scale Difference of Gaussians
      */
     public static int[][] MDoG(int[][] img, int width, int height, int[] sigmas)
     {
-        int row, col;
-        double[][] DoG = new double[width][height], gauss, gauss2;
+        int row, col, sigma2;
+        double[][] MDoG = new double[width][height], gauss, gauss2;
+        Map<Integer, double[][]> cached = new HashMap<>();
 
         for (int sigma: sigmas) {
-            gauss = GaussianBlur(img, sigma, width, height);
-            gauss2 = GaussianBlur(img, 2 * sigma, width, height);
+            sigma2 = 2 * sigma;
+            // Cache the results to prevent redundant calculations
+            // Useful if duplication is common
+            if (cached.containsKey(sigma)) {
+                gauss = cached.get(sigma);
+            } else {
+                gauss = GaussianBlur(img, sigma, width, height);
+                cached.put(sigma, gauss);
+            }
+            if (cached.containsKey(sigma2)) {
+                gauss2 = cached.get(sigma2);
+            } else {
+                gauss2 = GaussianBlur(img, sigma2, width, height);
+                cached.put(sigma2, gauss2);
+            }
+            // Save DoG as the absolute difference and add to MDoG
             for (row = 0; row < width; row++) {
                 for (col = 0; col < height; col++) {
-                    DoG[row][col] += Math.abs(gauss2[row][col] - gauss[row][col]);
+                    MDoG[row][col] += Math.abs(gauss2[row][col] - gauss[row][col]);
                 }
             }
         }
 
-        return ArrayHelper.NormalizeToImg(DoG, width, height);
+        return ArrayHelper.NormalizeToImg(MDoG, width, height);
     }
 
     
@@ -232,10 +247,12 @@ public class ImageProcessing {
     {
         int row, col, i, radius = kernelSize / 2, newWidth = width+radius+radius, newHeight = height+radius+radius;
         double pixel;
-        double[][] result = new double[width][height], intermediateArr = new double[newWidth][newHeight], 
-            paddedArr = ArrayHelper.Int2Double(PadBorder(img, radius, 'r', width, height), newWidth, newHeight);
+        double[][] result = new double[width][height], 
+            intermediateArr = new double[newWidth][newHeight], 
+            paddedArr = ArrayHelper.Int2Double(
+                PadBorder(img, radius, 'R', width, height), newWidth, newHeight);
 
-        // First pass (gaussian blur by column)
+        // First pass (gaussian blur each column)
         for (col = 0; col < newHeight; col++) {
             for (row = 0; row < width; row++) {
                 pixel = 0;
@@ -246,7 +263,7 @@ public class ImageProcessing {
             }
         }
 
-        // Second pass (gaussian blur by row)
+        // Second pass (gaussian blur each row)
         for (row = 0; row < width; row++) {
             for (col = 0; col < height; col++) {
                 pixel = 0;
@@ -278,7 +295,7 @@ public class ImageProcessing {
         double pixel;
         double[][] result = new double[width][height];
         double[][] paddedArr = ArrayHelper.Int2Double(PadBorder(
-            img, radius, 'r', width, height), newWidth, newHeight);
+            img, radius, 'R', width, height), newWidth, newHeight);
 
         // First pass (gaussian blur by column)
         for (row = 0; row < width; row++) {
@@ -344,11 +361,17 @@ public class ImageProcessing {
 
     /** 
      * Pad a grayscale image at its borders, the padding method defaults to zero padding 
-     * but reflection padding provides the best effect for edge detection purpose
+     * but reflection padding provides the best effect for edge detection purpose 
+     * <p>
+     * method 'R': reflection padding
+     * <p>
+     * method 'r': reflection padding (only reflect row, zero pad columns)
+     * <p>
+     * method 'c': reflection padding (only reflect column, zero pad rows)
      * 
      * @param img input image (grayscale or one colour channel)
      * @param pad number of pixels that needs to be padded at each border
-     * @param method 'r': reflection padding, default: zero padding
+     * @param method default: zero padding
      * @param width img's row number
      * @param height img's column number
      * @return int[][] padded image
@@ -367,7 +390,7 @@ public class ImageProcessing {
 
         switch (method) {
             // Reflection padding
-            case 'r':
+            case 'R':
                 // Reflect the columns
                 for (col = 0; col < pad; col++) {
                     borderL = ArrayHelper.GetCol(img, col, width);
@@ -385,6 +408,29 @@ public class ImageProcessing {
                     System.arraycopy(borderR, 0, result[pad+width+row], 0, newHeight);
                 }
                 break;
+            
+            case 'r':
+                // Reflect the rows
+                for (row = 0; row < pad; row++) {
+                    borderL = result[pad+row];
+                    borderR = result[pad+width-row-1];
+                    System.arraycopy(borderL, 0, result[pad-row-1], 0, newHeight);
+                    System.arraycopy(borderR, 0, result[pad+width+row], 0, newHeight);
+                }
+                break;
+            
+            case 'c':
+                // Reflect the columns
+                for (col = 0; col < pad; col++) {
+                    borderL = ArrayHelper.GetCol(img, col, width);
+                    borderR = ArrayHelper.GetCol(img, height-col-1, width);
+                    for (row = pad; row < newWidth-pad; row++) {
+                        result[row][pad-col-1] = borderL[row-pad];
+                        result[row][pad+height+col] = borderR[row-pad];
+                    }
+                }
+                break;
+            
             // Zero padding
             default:
                 break;

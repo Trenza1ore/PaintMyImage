@@ -10,30 +10,28 @@ public class TaskManager
     public int taskID = 0;
     private int startTime, subTaskID, startTimeSub, taskIDEnd, subTaskIDEnd, 
         startTimeTotal = LocalTime.now().toSecondOfDay();
-    private String  timerTemplate = "> Done, took %d second(s)\n\n", 
+    private String  timerTemplate = "done, took %d second(s)\n", 
                     finish = "All tasks finished!\n";
-    private String[] msg = {
-        " Parsing command line arguments...                      ",
-        " Creating sobel magnitude map via pyramid...            ",
-        " Creating sobel orientation map via filtered image...   ",
-        " Creating multiple versions of the brushes...           ",
-        " Calculating multi-scale difference of Gaussian...      ",
-        " Rendering strokes onto the canvas...                   ",
+    private String[] brushNames = { "compact", "elongated" }, msg = {
+        " Parsing command line arguments...",
+        " Creating sobel magnitude map via image pyramid...",
+        " Creating sobel orientation map with filtered image...",
+        " Creating multiple versions of the brushes...",
+        " Calculating Multi-scale Difference of Gaussians...",
+        " Rendering strokes onto the canvas...",
         " Filling the unpainted areas with appropriate colours..."
     };
-
 
     public TaskManager() 
     {
         taskIDEnd = 7;
-        subTaskID = 5;
-        subTaskIDEnd = 0;
+        subTaskID = 0;
+        subTaskIDEnd = 10;
     }
-
 
     /**
      * Customized constructor, task ID starts from zero and is incremented each time a task 
-     * is finished, sub task ID is decremented each time a sub task is finished
+     * is finished, sub task ID is likewise incremented each time a sub task is finished
      * 
      * @param msg list of messages to display
      * @param taskIDEnd end of the taskID range (exclusive)
@@ -49,7 +47,6 @@ public class TaskManager
         this.subTaskIDEnd = subTaskIDEnd;
         this.finish = finish;
     }
-
 
     public void StartTask()
     {
@@ -72,15 +69,16 @@ public class TaskManager
 
     public void StartSubTask()
     {
-        System.out.printf("  - painting with brush size %d/5 of the original... \n", subTaskID);
+        System.out.printf("  - %9s brush with scale of %d/5...", 
+            brushNames[subTaskID / 5], 5 - (subTaskID % 5));
         startTimeSub = LocalTime.now().toSecondOfDay();
     }
 
     public void FinishSubTask()
     {
         System.out.printf("  " + timerTemplate, LocalTime.now().toSecondOfDay() - startTimeSub);
-        subTaskID--;
-        if (subTaskID > subTaskIDEnd) {
+        subTaskID++;
+        if (subTaskID < subTaskIDEnd) {
             StartSubTask();
         }
     }
