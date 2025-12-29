@@ -89,7 +89,7 @@ public class ImagePPM {
             DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fileName)));
 
             out.writeBytes("P6\n");
-            out.writeBytes("#created by Paul Rosin\n");
+            out.writeBytes("#created by https://github.com/Trenza1ore/Relax-Painter\n");
             out.writeBytes(width + " " + height + "\n255\n");
 
             for (int y = 0; y < height; y++)
